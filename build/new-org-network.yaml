@@ -42,8 +42,8 @@ network:
   # Do not check-in docker_password.
   docker:
     url: "index.docker.io/hyperledgerlabs"
-    username: <DOCKER USER NAME>
-    password: <DOCKER PASSWORD>
+    username: "USERNAME"
+    password: "PASSWORD"
   
   # Remote connection information for orderer (will be blank or removed for orderer hosting organization)
   orderers:
@@ -52,7 +52,7 @@ network:
       name: orderer1
       org_name: supplychain                 # org_name should match one organization definition below in organizations: key            
       uri: orderer1.supplychain-net:7050    # Internal URI for orderer which should be reachable by all peers
-      certificate: /home/ubuntu/baf-minikube/build/orderer1.crt   # the directory should be writable
+      certificate: /home/ubuntu/baf-main/build/orderer1.crt   # the directory should be writable
   
   # The channels defined for a network with participating peers in each channel
   channels:
@@ -65,17 +65,27 @@ network:
     - organization:
       name: carrier
       type: creator       # creator organization will create the channel and instantiate chaincode, in addition to joining the channel and install chaincode
-      org_status: new
+      org_status: existing
       peers:
       - peer:
         name: peer0
         gossipAddress: peer0.carrier-net:7051         # Internal URI of the gossip peer
         peerAddress: peer0.carrier-net:7051           # Internal URI of the peer as this is for minikube
-      ordererAddress: orderer1.supplychain-net:7050   # Internal URI of the orderer
+      ordererAddress: orderer1.supplychain-net:7050   # Internal URI of the orderer   
+    # - organization:      #NEW ORG DETAILS
+    #   name: store
+    #   type: joiner        # joiner organization will only join the channel and install chaincode
+    #   org_status: new # Status of the organization for the existing network, can be new / existing
+    #   peers:
+    #   - peer:
+    #     name: peer0
+    #     gossipAddress: peer0.store-net:7051
+    #     peerAddress: peer0.store-net:7051  # External URI of the peer
+    #   ordererAddress: orderer1.supplychain-net:7050       
     - organization:
       name: manufacturer
       type: joiner
-      org_status: new
+      org_status: existing
       peers:
       - peer:
         name: peer0
@@ -87,11 +97,12 @@ network:
       - carrier
       # - warehouse
       - manufacturer
-      # - store
+      - store
       corepeerAddress:
       - peer0.carrier-net:7051
       # - peer0.warehouse-net.hf.demo.aws.blockchaincloudpoc.com:8443
       - peer0.manufacturer-net:7051
+      - peer0.store-net:7051      
       # - peer0.store-net.hf.demo.aws.blockchaincloudpoc.com:8443    
     genesis:
       name: OrdererGenesis  
@@ -110,7 +121,7 @@ network:
       subject: "O=Orderer,L=51.50/-0.13/London,C=GB"
       type: orderer
       external_url_suffix: develop.local.com   # Ignore for proxy none
-      org_status: new
+      org_status: existing
       ca_data:
         url: ca.supplychain-net:7054
         certificate: file/server.crt           # This has not been implemented yet
@@ -124,27 +135,27 @@ network:
       k8s:
         region: "cluster_region"
         context: "minikube"
-        config_file: "/home/ubuntu/baf-minikube/build/config"
+        config_file: "/home/ubuntu/baf-main/build/config"
 
       # Hashicorp Vault server address and root-token. Vault should be unsealed.
       # Do not check-in root_token
       vault:
-        url: "<IP ADDRESS>"
-        root_token: "<VAULT TOKEN>"
+        url: "http://10.251.4.130:8200"
+        root_token: "<VAULT_TOKEN>"
         secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
       # Do not check-in 
       gitops:
         git_protocol: "https" # Option for git over https or ssh
-        git_url: "<GIT URL>"  # Gitops https or ssh url for flux value files 
+        git_url: "https://<GIT_REPO>"  # Gitops https or ssh url for flux value files 
         branch: "local"                                                                 # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases"                        # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"                             # Relative Path where the Helm charts are stored in Git repo
-        git_repo: "<GIT REPO>"       # Gitops git repository URL for git push  (without https://)
-        username: "<GIT USER NAME>"                                                     # Git user who has rights to check-in in all branches
-        password: "<GIT ACCESS TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
-        email: "<GIT EMAIL>"                                                           # Email to use in git config
-        private_key: "/home/ubuntu/baf-minikube/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
+        git_repo: "<GIT_REPO>"       # Gitops git repository URL for git push  (without https://)
+        username: "<GIT_USERNAME>"                                                     # Git user who has rights to check-in in all branches
+        password: "<GIT_TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
+        email: "<GIT_EMAIL>"                                                           # Email to use in git config
+        private_key: "/home/ubuntu/baf-main/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
      
       # Services maps to the pods that will be deployed on the k8s cluster
       # This sample is an orderer service and includes a zk-raft consensus
@@ -182,7 +193,7 @@ network:
       subject: "O=Manufacturer,OU=Manufacturer,L=47.38/8.54/Zurich,C=CH"
       type: peer
       external_url_suffix: develop.local.com  # Ignore for proxy none
-      org_status: new
+      org_status: existing
       ca_data:
         url: ca.manufacturer-net:7054
         certificate: file/server.crt
@@ -196,27 +207,27 @@ network:
       k8s:
         region: "cluster_region"
         context: "minikube"
-        config_file: "/home/ubuntu/baf-minikube/build/config"
+        config_file: "/home/ubuntu/baf-main/build/config"
 
       # Hashicorp Vault server address and root-token. Vault should be unsealed.
       # Do not check-in root_token
       vault:
-        url: "<IP ADDRESS>"
-        root_token: "<VAULT TOKEN>"
+        url: "http://10.251.4.130:8200"
+        root_token: "<VAULT_TOKEN>"
         secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
       # Do not check-in 
       gitops:
         git_protocol: "https" # Option for git over https or ssh
-        git_url: "<GIT URL>"  # Gitops https or ssh url for flux value files 
+        git_url: "https://<GIT_REPO>"  # Gitops https or ssh url for flux value files 
         branch: "local"                                                                 # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases"                        # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"                             # Relative Path where the Helm charts are stored in Git repo
-        git_repo: "<GIT REPO>"       # Gitops git repository URL for git push  (without https://)
-        username: "<GIT USER NAME>"                                                     # Git user who has rights to check-in in all branches
-        password: "<GIT ACCESS TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
-        email: "<GIT EMAIL>"                                                           # Email to use in git config
-        private_key: "/home/ubuntu/baf-minikube/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
+        git_repo: "<GIT_REPO>"       # Gitops git repository URL for git push  (without https://)
+        username: "<GIT_USERNAME>"                                                     # Git user who has rights to check-in in all branches
+        password: "<GIT_TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
+        email: "<GIT_EMAIL>"                                                           # Email to use in git config
+        private_key: "/home/ubuntu/baf-main/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
 
       # The participating nodes are peers
       # This organization hosts it's own CA server
@@ -233,8 +244,8 @@ network:
           type: anchor                                    # This can be anchor/nonanchor. Atleast one peer should be anchor peer.         
           gossippeeraddress: peer0.manufacturer-net:7051  # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer  
           peerAddress: peer0.manufacturer-net:7051        # Internal URI of the peer as this is for minikube
-          certificate: "/home/ubuntu/baf-minikube/cert/manufacturerca.crt" # certificate path for peer
-          cli: disabled                                   # Creates a peer cli pod depending upon the (enabled/disabled) tag. 
+          certificate: "/home/ubuntu/baf-main/cert/manufacturerca.crt" # certificate path for peer
+          cli: enabled                                   # Creates a peer cli pod depending upon the (enabled/disabled) tag. 
           grpc:
             port: 7051         
           events:
@@ -253,9 +264,9 @@ network:
             maindirectory: "chaincode-external"    #The main directory where chaincode is needed to be placed
             lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
-              username: "<GIT USER NAME>"        # Git Service user who has rights to check-in in all branches
-              password: "<GIT ACCESS TOKEN>"
-              url: "<GIT REPO URL"
+              username: "<GIT_USERNAME>"        # Git Service user who has rights to check-in in all branches
+              password: "<GIT_TOKEN>"
+              url: "<GIT_REPO>"
               branch: main 
               path: "basic/chaincode-external"     #The path to the chaincode 
             arguments: '"InitLedger"'      #Arguments to be passed along with the chaincode parameters
@@ -270,7 +281,7 @@ network:
       subject: "O=Carrier,OU=Carrier,L=51.50/-0.13/London,C=GB"
       type: peer
       external_url_suffix: develop.local.com  #Ignore for proxy none
-      org_status: new
+      org_status: existing
       ca_data:
         url: ca.carrier-net:7054
         certificate: file/server.crt
@@ -284,27 +295,27 @@ network:
       k8s:
         region: "cluster_region"
         context: "minikube"
-        config_file: "/home/ubuntu/baf-minikube/build/config"
+        config_file: "/home/ubuntu/baf-main/build/config"
 
       # Hashicorp Vault server address and root-token. Vault should be unsealed.
       # Do not check-in root_token
       vault:
-        url: "<IP ADDRESS>"
-        root_token: "<VAULT TOKEN>"
+        url: "http://10.251.4.130:8200"
+        root_token: "<VAULT_TOKEN>"
         secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
       # Do not check-in 
       gitops:
         git_protocol: "https" # Option for git over https or ssh
-        git_url: "<GIT URL>"  # Gitops https or ssh url for flux value files 
+        git_url: "https://<GIT_REPO>"  # Gitops https or ssh url for flux value files 
         branch: "local"                                                                 # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases"                        # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"                             # Relative Path where the Helm charts are stored in Git repo
-        git_repo: "<GIT REPO>"       # Gitops git repository URL for git push  (without https://)
-        username: "<GIT USER NAME>"                                                     # Git user who has rights to check-in in all branches
-        password: "<GIT ACCESS TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
-        email: "<GIT EMAIL>"                                                           # Email to use in git config
-        private_key: "/home/ubuntu/baf-minikube/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
+        git_repo: "<GIT_REPO>"       # Gitops git repository URL for git push  (without https://)
+        username: "<GIT_USERNAME>"                                                     # Git user who has rights to check-in in all branches
+        password: "<GIT_TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
+        email: "<GIT_EMAIL>"                                                           # Email to use in git config
+        private_key: "/home/ubuntu/baf-main/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
 
       services:
         ca:
@@ -319,8 +330,8 @@ network:
           type: anchor                                # This can be anchor/nonanchor. Atleast one peer should be anchor peer.    
           gossippeeraddress: peer0.carrier-net:7051   # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer  
           peerAddress: peer0.carrier-net:7051         # Internal URI of the peer as this is for minikube     
-          certificate: "/home/ubuntu/baf-minikube/cert/carrierca.crt" # certificate path for peer
-          cli: disabled                               # Creates a peer cli pod depending upon the (enabled/disabled) tag. 
+          certificate: "/home/ubuntu/baf-main/cert/carrierca.crt" # certificate path for peer
+          cli: enabled                               # Creates a peer cli pod depending upon the (enabled/disabled) tag. 
           grpc:
             port: 7051         
           events:
@@ -333,17 +344,107 @@ network:
           expressapi:
             targetPort: 3000
             port: 3000
-          chaincode:   
+          chaincode:
             name: "basic"   #This has to be replaced with the name of the chaincode
             version: "1"   #This has to be replaced with the version of the chaincode
             maindirectory: "chaincode-external"    #The main directory where chaincode is needed to be placed
             lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
-              username: "<GIT USER NAME>"        # Git Service user who has rights to check-in in all branches
-              password: "<GIT ACCESS TOKEN>"
-              url: "<GIT REPO URL"
+              username: "<GIT_USERNAME>"        # Git Service user who has rights to check-in in all branches
+              password: "<GIT_TOKEN>"
+              url: "<GIT_REPO>"
               branch: main 
               path: "basic/chaincode-external"     #The path to the chaincode 
             arguments: '"InitLedger"'      #Arguments to be passed along with the chaincode parameters
             endorsements: ""          #Endorsements (if any) provided along with the chaincode    
             port: 7052  #Endorsements (if any) provided along with the chaincode
+
+
+  # NEW ORG DETAILS
+
+    # - organization:
+    #   name: store
+    #   country: US
+    #   state: New York
+    #   location: New York
+    #   subject: "O=Store,OU=Store,L=40.73/-74/New York,C=US"
+    #   type: peer
+    #   external_url_suffix: develop.local.com
+    #   org_status: new # Status of the organization for the existing network, can be new / existing
+    #   ca_data:
+    #     url: ca.store-net:7054
+    #     certificate: file/server.crt
+      
+    #   cloud_provider: minikube   # Options: aws, azure, gcp, digitalocean, minikube
+
+    #   # Kubernetes cluster deployment variables. The config file path and name has to be provided in case
+    #   # the cluster has already been created.
+    #   k8s:
+    #     region: "cluster_region"
+    #     context: "minikube"
+    #     config_file: "/home/ubuntu/baf-main/build/config"
+
+    #   # Hashicorp Vault server address and root-token. Vault should be unsealed.
+    #   # Do not check-in root_token
+    #   vault:
+    #     url: "http://10.251.4.130:8200"
+    #     root_token: "<VAULT_TOKEN>"
+    #     secret_path: "secret"
+    #   # Git Repo details which will be used by GitOps/Flux.
+    #   # Do not check-in 
+    #   gitops:
+    #     git_protocol: "https" # Option for git over https or ssh
+    #     git_url: "https://<GIT_REPO>"  # Gitops https or ssh url for flux value files 
+    #     branch: "local"                                                                 # Git branch where release is being made
+    #     release_dir: "platforms/hyperledger-fabric/releases"                        # Relative Path in the Git repo for flux sync per environment. 
+    #     chart_source: "platforms/hyperledger-fabric/charts"                             # Relative Path where the Helm charts are stored in Git repo
+    #     git_repo: "<GIT_REPO>"       # Gitops git repository URL for git push  (without https://)
+    #     username: "<GIT_USERNAME>"                                                     # Git user who has rights to check-in in all branches
+    #     password: "<GIT_TOKEN>"          # Git Server user password/token (Optional for ssh; Required for https)
+    #     email: "<GIT_EMAIL>"                                                           # Email to use in git config
+    #     private_key: "/home/ubuntu/baf-main/build/gitops"               # Path to private key file which has write-access to the git repo (Optional for https; Required for ssh)
+
+    #   # The participating nodes are peers
+    #   # This organization hosts it's own CA server
+    #   services:
+    #     ca:
+    #       name: ca
+    #       subject: "/C=US/ST=New York/L=New York/O=Store/CN=ca.store-net"
+    #       type: ca
+    #       grpc:
+    #         port: 7054
+    #     peers:
+    #     - peer:
+    #       name: peer0          
+    #       type: anchor                                    # This can be anchor/nonanchor. Atleast one peer should be anchor peer.         
+    #       gossippeeraddress: peer0.store-net:7051  # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer  
+    #       peerAddress: peer0.store-net:7051        # Internal URI of the peer as this is for minikube
+    #       certificate: "/home/ubuntu/baf-main/cert/storeca.crt" # certificate path for peer
+    #       cli: enabled                                   # Creates a peer cli pod depending upon the (enabled/disabled) tag. 
+    #       grpc:
+    #         port: 7051         
+    #       events:
+    #         port: 7053
+    #       couchdb:
+    #         port: 5984
+    #       restserver:           # This is for the rest-api server
+    #         targetPort: 20001
+    #         port: 20001 
+    #       expressapi:           # This is for the express api server
+    #         targetPort: 3000
+    #         port: 3000
+    #       chaincode:
+    #         name: "basic"   #This has to be replaced with the name of the chaincode
+    #         version: "1"   #This has to be replaced with the version of the chaincode
+    #         maindirectory: "chaincode-external"    #The main directory where chaincode is needed to be placed
+    #         lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
+    #         repository:
+    #           username: "<GIT_USERNAME>"        # Git Service user who has rights to check-in in all branches
+    #           password: "<GIT_TOKEN>"
+    #           url: "<GIT_REPO>"
+    #           branch: main 
+    #           path: "basic/chaincode-external"     #The path to the chaincode 
+    #         arguments: '"InitLedger"'      #Arguments to be passed along with the chaincode parameters
+    #         endorsements: ""          #Endorsements (if any) provided along with the chaincode                                         
+    #         port: 7052  #Endorsements (if any) provided along with the chaincode
+    

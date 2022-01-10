@@ -47,6 +47,14 @@ use the prereq.sh script in the base directory to install all the other prerequi
       - Add the vault token and ip address to the vault section in network.yaml file [./build/network.yaml].
       - Replace the placeholders in the file with appropriate values
 
+  - ### Editing the Deployment.yaml file
+  
+      - Since we are deploying the chaincodes externally, the details of the external chaincode docker image should be mentioned in the deployment.yaml file 
+        [./platforms/hyperledger-fabric/charts/external_chaincode/templates/deployment.yaml]
+      - The same information should also be given in the nested_cc_deploy.yaml file 
+        [./platforms/hyperledger-fabric/configuration/roles/create/external-chaincode/tasks/nested_cc_deploy.yaml]
+
+
   - ### Starting up minikube
 
       - Once you added the vault token and ip to the deploykube.sh script, you can save it and run the script in order to start minikube locally
@@ -61,5 +69,11 @@ use the prereq.sh script in the base directory to install all the other prerequi
     - Once you stop the network, use the teardown.sh script to prune all persited network data and cache
 
 
+# Adding New Org to Existing Network
 
-  
+  - Once you have a fabric network up and running , you can add a new org to the network using the following steps
+
+    - Update the new-org-network.yaml file from the build directory, add the details of the new organisation in the "channel" and "organisations" section
+    - Make sure that the org_status of the new organisation is set to "new", while the others are set to "existing"
+    - Once all the appropriate details are given in the new-org-network.yaml file, save it and run the addNewOrg.sh script
+    - This will add a new org to an existing fabric network
